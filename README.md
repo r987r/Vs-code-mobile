@@ -10,33 +10,74 @@ Mobile / Desktop view mode.
 
 ## Quick start — download & sideload the app
 
-Every push to `main` triggers a GitHub Actions build that produces a ready-to-install
-debug APK — **no Android Studio or SDK required**.
+Every push to `main` automatically runs **secret scanning, Android Lint, unit tests,
+and a build** before producing a ready-to-install debug APK — no Android Studio or SDK
+required on your end.
 
-### Download the latest debug APK
+> **Prerequisite:** The PR must be **merged into `main`** (or you push directly to
+> `main`) before the APK is generated. Once merged, the workflow runs automatically.
 
-1. Go to the [**Actions** tab](https://github.com/r987r/Vs-code-mobile/actions/workflows/android-build.yml)
-   of this repository.
-2. Click the most recent successful **"Android CI"** workflow run.
-3. Scroll to **Artifacts** at the bottom of the page and download **`VSCodeMobile-debug`**.
-4. Unzip the downloaded archive — the `.apk` file is inside.
+### Step-by-step: get the APK onto your phone
 
-### Install the APK on your Android phone
+**Step 1 — Merge this PR (or push to `main`)**
+The Android CI workflow starts automatically within seconds.
+
+**Step 2 — Wait for the build to finish (~5 min)**
+Watch the green checkmark appear on the
+[Actions tab](https://github.com/r987r/Vs-code-mobile/actions/workflows/android-build.yml).
+All five checks must pass: Secret Scan → Lint → Tests → Build → ✅
+
+**Step 3 — Download the APK**
+1. Click the most recent successful **"Android CI"** workflow run.
+2. Scroll to **Artifacts** at the bottom of the page.
+3. Download **`VSCodeMobile-debug`** (a `.zip` file).
+4. Unzip it — you will find `app-debug.apk` and `app-debug.apk.sha256` inside.
+
+**Step 4 — (Recommended) Verify the APK has not been tampered with**
+On your computer, open a terminal in the folder where you unzipped the archive:
+```bash
+sha256sum -c app-debug.apk.sha256
+# Expected output: app-debug.apk: OK
+```
+You can also compare the hash shown in the workflow run's **Summary** panel.
+
+**Step 5 — Enable "Install unknown apps" on your Android phone**
 
 > **Requires Android 8.0 (API 26) or later.**
 
-1. **Enable "Install unknown apps"** on your device:
-   - Android 8+: **Settings → Apps → Special app access → Install unknown apps**,
-     then allow your file manager or browser.
-2. Transfer the `.apk` to your phone (USB, Google Drive, email, etc.).
-3. Open the `.apk` on your phone and tap **Install**.
-4. Launch **VS Code Mobile** and sign in with your GitHub account.
+- **Android 8–9:** Settings → Apps → ⋮ → Special app access → Install unknown apps  
+  → select your file manager → turn on **Allow from this source**
+- **Android 10+:** Settings → Apps → (select your file manager) → Install unknown apps → Allow
 
-### Tagged releases
+**Step 6 — Transfer and install the APK**
+1. Send `app-debug.apk` to your phone (USB cable, Google Drive, email — any method).
+2. Open the file on your phone; tap **Install**.
+3. Launch **VS Code Mobile** and tap **Sign in with GitHub**.
 
-Push a Git tag (e.g. `git tag v1.0.0 && git push --tags`) to automatically
-create a [GitHub Release](https://github.com/r987r/Vs-code-mobile/releases)
-with the release APK attached.
+### Tagged releases (optional)
+
+Push a Git tag to automatically create a
+[GitHub Release](https://github.com/r987r/Vs-code-mobile/releases)
+with the APK and its checksum attached as release assets:
+```bash
+git tag v1.0.0 && git push --tags
+```
+
+## CI pipeline — what protects you
+
+Every push and pull request runs these checks **in order**; the APK is only produced
+if every check passes:
+
+| Job | Tool | What it catches |
+|-----|------|----------------|
+| 🔍 Secret Scanning | TruffleHog | Accidentally committed tokens, API keys, passwords |
+| 🧹 Android Lint | AGP `lintDebug` | Insecure WebView settings, hardcoded credentials, 500+ code & security rules |
+| 🧪 Unit Tests | JUnit / Mockito | Regressions in auth, API client, WebView logic |
+| 🔒 Dependency Review *(PRs only)* | GitHub Dependency Review | New dependencies with known CVEs (blocks `high` severity) |
+| 📦 Build & Checksum | Gradle + `sha256sum` | Reproducible APK with integrity hash |
+
+The APK artifact also ships with a **SHA-256 checksum file** so you can verify the
+download hasn't been altered before installing it on your phone.
 
 ---
 
