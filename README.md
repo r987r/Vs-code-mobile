@@ -1,8 +1,42 @@
 # VS Code Mobile — GitHub Codespaces on Android
 
+[![Android CI](https://github.com/r987r/Vs-code-mobile/actions/workflows/android-build.yml/badge.svg)](https://github.com/r987r/Vs-code-mobile/actions/workflows/android-build.yml)
+
 A native Android app that opens your GitHub Codespaces in a mobile-optimised view,
 with a VS Code-style left Activity Bar for quick panel switching and a toggleable
 Mobile / Desktop view mode.
+
+---
+
+## Quick start — download & sideload the app
+
+Every push to `main` triggers a GitHub Actions build that produces a ready-to-install
+debug APK — **no Android Studio or SDK required**.
+
+### Download the latest debug APK
+
+1. Go to the [**Actions** tab](https://github.com/r987r/Vs-code-mobile/actions/workflows/android-build.yml)
+   of this repository.
+2. Click the most recent successful **"Android CI"** workflow run.
+3. Scroll to **Artifacts** at the bottom of the page and download **`VSCodeMobile-debug`**.
+4. Unzip the downloaded archive — the `.apk` file is inside.
+
+### Install the APK on your Android phone
+
+> **Requires Android 8.0 (API 26) or later.**
+
+1. **Enable "Install unknown apps"** on your device:
+   - Android 8+: **Settings → Apps → Special app access → Install unknown apps**,
+     then allow your file manager or browser.
+2. Transfer the `.apk` to your phone (USB, Google Drive, email, etc.).
+3. Open the `.apk` on your phone and tap **Install**.
+4. Launch **VS Code Mobile** and sign in with your GitHub account.
+
+### Tagged releases
+
+Push a Git tag (e.g. `git tag v1.0.0 && git push --tags`) to automatically
+create a [GitHub Release](https://github.com/r987r/Vs-code-mobile/releases)
+with the release APK attached.
 
 ---
 
@@ -75,12 +109,18 @@ app/src/main/java/com/vscode/mobile/
 
 ### 2. Configure credentials
 
-Create `local.properties` in the project root (this file is gitignored):
+Copy `local.properties.example` to `local.properties` in the project root
+(this file is git-ignored — **never commit it**):
+
+```bash
+cp local.properties.example local.properties
+# then edit local.properties and fill in your SDK path and OAuth credentials
+```
 
 ```properties
 sdk.dir=/path/to/android-sdk
-GITHUB_CLIENT_ID=Ov23liXXXXXXXXXX
-GITHUB_CLIENT_SECRET=your_secret_here
+GITHUB_CLIENT_ID=YOUR_GITHUB_CLIENT_ID_HERE
+GITHUB_CLIENT_SECRET=YOUR_GITHUB_CLIENT_SECRET_HERE
 ```
 
 > **Note:** In production, proxy the token exchange through your own backend to avoid
@@ -98,6 +138,21 @@ GITHUB_CLIENT_SECRET=your_secret_here
 ```bash
 ./gradlew test
 ```
+
+### 5. Configure GitHub Secrets for CI (optional)
+
+The Actions workflow builds the APK automatically on every push. To include real
+OAuth credentials in the CI build, add the following
+[repository secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions):
+
+| Secret name           | Value                          |
+|-----------------------|--------------------------------|
+| `GITHUB_CLIENT_ID`    | Your GitHub OAuth App client ID |
+| `GITHUB_CLIENT_SECRET`| Your GitHub OAuth App secret   |
+
+If these secrets are absent, the workflow still builds a placeholder APK (the
+`REPLACE_WITH_YOUR_CLIENT_ID` build-time default is used), which is useful for
+verifying that the project compiles correctly.
 
 ---
 

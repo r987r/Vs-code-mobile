@@ -1,0 +1,134 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags:     [ "v*" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # ── Unit tests ────────────────────────────────────────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Write local.properties
+        run: |
+          echo "GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
+          echo "GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew test --no-daemon
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: app/build/reports/tests/
+
+  # ── Debug APK build ───────────────────────────────────────────────────────
+  build:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Write local.properties
+        run: |
+          echo "GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
+          echo "GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VSCodeMobile-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          # Keep the APK for 30 days so it can be downloaded and sideloaded
+          retention-days: 30
+
+  # ── GitHub Release (runs only when a version tag is pushed) ───────────────
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Verify required secrets
+        run: |
+          if [ -z "${{ secrets.GITHUB_CLIENT_ID }}" ] || [ -z "${{ secrets.GITHUB_CLIENT_SECRET }}" ]; then
+            echo "::error::GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET secrets must be set for release builds."
+            exit 1
+          fi
+
+      - name: Write local.properties
+        run: |
+          echo "GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID }}" >> local.properties
+          echo "GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET }}" >> local.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Rename APK with version tag
+        run: |
+          TAG="${{ github.ref_name }}"
+          cp app/build/outputs/apk/release/app-release-unsigned.apk \
+             "VSCodeMobile-${TAG}.apk"
+
+      - name: Create GitHub Release and upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "VSCodeMobile-*.apk"
+          generate_release_notes: true
