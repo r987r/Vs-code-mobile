@@ -1,0 +1,28 @@
+<resources>
+    <!-- VS Code dark theme palette -->
+    <color name="vscode_bg">#1E1E1E</color>
+    <color name="vscode_sidebar_bg">#252526</color>
+    <color name="vscode_activity_bar_bg">#333333</color>
+    <color name="vscode_tab_active_bg">#1E1E1E</color>
+    <color name="vscode_tab_inactive_bg">#2D2D2D</color>
+    <color name="vscode_accent">#007ACC</color>
+    <color name="vscode_accent_dark">#005F9E</color>
+    <color name="vscode_text_primary">#CCCCCC</color>
+    <color name="vscode_text_secondary">#858585</color>
+    <color name="vscode_text_highlight">#FFFFFF</color>
+    <color name="vscode_icon_active">#FFFFFF</color>
+    <color name="vscode_icon_inactive">#858585</color>
+    <color name="vscode_border">#474747</color>
+    <color name="vscode_selection">#264F78</color>
+
+    <!-- Status bar -->
+    <color name="status_bar_bg">#007ACC</color>
+
+    <!-- General -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="error_color">#F44747</color>
+    <color name="success_color">#89D185</color>
+    <color name="warning_color">#CCA700</color>
+</resources>

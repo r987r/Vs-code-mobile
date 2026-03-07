@@ -1,0 +1,57 @@
+<resources>
+    <string name="app_name">VS Code Mobile</string>
+
+    <!-- Auth -->
+    <string name="login_title">Sign in with GitHub</string>
+    <string name="login_subtitle">Access your Codespaces on the go</string>
+    <string name="btn_sign_in">Sign in with GitHub</string>
+    <string name="signing_in">Signing in…</string>
+    <string name="sign_out">Sign out</string>
+    <string name="auth_error_title">Sign-in Failed</string>
+    <string name="auth_error_message">Unable to complete sign-in. Please try again.</string>
+    <string name="auth_cancel">Cancel</string>
+
+    <!-- Codespaces list -->
+    <string name="codespaces_title">My Codespaces</string>
+    <string name="loading_codespaces">Loading codespaces…</string>
+    <string name="no_codespaces">No codespaces found.\nCreate one on github.com to get started.</string>
+    <string name="error_loading_codespaces">Failed to load codespaces. Pull down to retry.</string>
+    <string name="open_codespace">Open</string>
+    <string name="create_codespace">Create new codespace</string>
+    <string name="refresh">Refresh</string>
+
+    <!-- Main viewer tabs -->
+    <string name="tab_explorer">Explorer</string>
+    <string name="tab_code">Code</string>
+    <string name="tab_copilot">Copilot</string>
+    <string name="tab_terminal">Terminal</string>
+    <string name="tab_extensions">Extensions</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_git">Source Control</string>
+
+    <!-- View toggle -->
+    <string name="view_mode_title">View Mode</string>
+    <string name="view_mode_mobile">Mobile View</string>
+    <string name="view_mode_desktop">Desktop View</string>
+    <string name="view_mode_mobile_desc">Optimized panels for touch</string>
+    <string name="view_mode_desktop_desc">Full VS Code desktop layout</string>
+    <string name="apply">Apply</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Navigation / Menu -->
+    <string name="menu_view_mode">View Mode</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_back">Back</string>
+    <string name="toggle_sidebar">Toggle sidebar</string>
+
+    <!-- Errors -->
+    <string name="error_network">No internet connection</string>
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="error_session_expired">Your session has expired. Please sign in again.</string>
+    <string name="retry">Retry</string>
+
+    <!-- Content descriptions (accessibility) -->
+    <string name="cd_tab_icon">%s tab icon</string>
+    <string name="cd_codespace_icon">Codespace icon</string>
+    <string name="cd_github_logo">GitHub logo</string>
+</resources>

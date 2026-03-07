@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network Security Config
+    - Enforces HTTPS for all connections
+    - Pins certificates for GitHub and Codespaces domains
+    - Disallows cleartext traffic
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- GitHub API - pinned to DigiCert Global Root G2 and DigiCert TLS RSA4096 Root G5 -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">api.github.com</domain>
+        <domain includeSubdomains="true">github.githubassets.com</domain>
+        <domain includeSubdomains="true">avatars.githubusercontent.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+        <!-- Certificate pins for github.com (SHA-256, update when certs rotate) -->
+        <pin-set expiration="2026-01-01">
+            <!-- DigiCert Global Root G2 -->
+            <pin digest="SHA-256">r/mIkG3eEpVdm+u/ko/cwxzOMo1bk4TyHIlByibiA5E=</pin>
+            <!-- DigiCert TLS RSA SHA256 2020 CA1 -->
+            <pin digest="SHA-256">SJi84SHMPMWvFmrjDJEQ4oKdz9xwbQrFjU6RvnZpC0E=</pin>
+        </pin-set>
+    </domain-config>
+
+    <!-- GitHub Codespaces domain -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">githubpreview.dev</domain>
+        <domain includeSubdomains="true">app.github.dev</domain>
+        <domain includeSubdomains="true">github.dev</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

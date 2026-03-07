@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Main Codespace Viewer Activity Layout
+
+    Structure:
+    ┌─────────────────────────────────────────┐
+    │  Toolbar (codespace name + menu)        │
+    ├──────┬──────────────────────────────────┤
+    │      │                                  │
+    │ Left │  WebView (code / panel content)  │
+    │ Tab  │                                  │
+    │ Bar  │                                  │
+    │      │                                  │
+    └──────┴──────────────────────────────────┘
+    Left tab bar mimics VS Code Activity Bar.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/vscode_bg">
+
+    <!-- Top toolbar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/vscode_sidebar_bg"
+        app:titleTextColor="@color/vscode_text_primary"
+        app:subtitleTextColor="@color/vscode_text_secondary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Left Activity Bar (VS Code-style vertical tabs) -->
+    <LinearLayout
+        android:id="@+id/activityBar"
+        android:layout_width="@dimen/activity_bar_width"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:background="@color/vscode_activity_bar_bg"
+        android:gravity="top|center_horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/statusBar">
+
+        <!-- Explorer tab -->
+        <include
+            android:id="@+id/tabExplorer"
+            layout="@layout/item_activity_tab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- Search tab -->
+        <include
+            android:id="@+id/tabSearch"
+            layout="@layout/item_activity_tab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+
+        <!-- Git tab -->
+        <include
+            android:id="@+id/tabGit"
+            layout="@layout/item_activity_tab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+
+        <!-- Extensions tab -->
+        <include
+            android:id="@+id/tabExtensions"
+            layout="@layout/item_activity_tab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+
+        <!-- Spacer pushes copilot / terminal to bottom -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Copilot tab (near bottom like VS Code) -->
+        <include
+            android:id="@+id/tabCopilot"
+            layout="@layout/item_activity_tab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+
+        <!-- Terminal tab -->
+        <include
+            android:id="@+id/tabTerminal"
+            layout="@layout/item_activity_tab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+
+    </LinearLayout>
+
+    <!-- WebView displaying the Codespace panel content -->
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toEndOf="@id/activityBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/statusBar" />
+
+    <!-- Loading overlay shown while WebView loads -->
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/vscode_bg"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toEndOf="@id/activityBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/statusBar">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/vscode_accent" />
+
+    </FrameLayout>
+
+    <!-- Error view shown when WebView fails to load -->
+    <LinearLayout
+        android:id="@+id/errorView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:background="@color/vscode_bg"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toEndOf="@id/activityBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/statusBar">
+
+        <TextView
+            android:id="@+id/tvError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/error_color"
+            android:textSize="14sp"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/btnRetry"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginTop="16dp"
+            android:text="@string/retry"
+            android:background="@drawable/bg_button_primary"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+    <!-- Bottom status bar -->
+    <LinearLayout
+        android:id="@+id/statusBar"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:background="@color/status_bar_bg"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvStatusLeft"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:fontFamily="monospace" />
+
+        <TextView
+            android:id="@+id/tvStatusRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:fontFamily="monospace" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
