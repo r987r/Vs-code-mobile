@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single vertical tab item for the Activity Bar -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="@dimen/tab_icon_padding"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackgroundBorderless"
+    android:minHeight="52dp">
+
+    <ImageView
+        android:id="@+id/ivTabIcon"
+        android:layout_width="@dimen/tab_icon_size"
+        android:layout_height="@dimen/tab_icon_size"
+        android:contentDescription="@string/app_name" />
+
+    <TextView
+        android:id="@+id/tvTabLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:textSize="@dimen/tab_label_size"
+        android:textColor="@color/vscode_icon_inactive"
+        android:maxLines="1"
+        android:ellipsize="none" />
+
+</LinearLayout>

@@ -1,0 +1,32 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme -->
+    <style name="Theme.VSCodeMobile" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/vscode_accent</item>
+        <item name="colorPrimaryVariant">@color/vscode_accent_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSurface">@color/vscode_bg</item>
+        <item name="colorOnSurface">@color/vscode_text_primary</item>
+        <item name="android:windowBackground">@color/vscode_bg</item>
+        <item name="android:statusBarColor">@color/status_bar_bg</item>
+        <item name="android:navigationBarColor">@color/vscode_activity_bar_bg</item>
+        <item name="android:textColorPrimary">@color/vscode_text_primary</item>
+        <item name="android:textColorSecondary">@color/vscode_text_secondary</item>
+    </style>
+
+    <!-- Splash screen theme -->
+    <style name="Theme.VSCodeMobile.Splash" parent="Theme.VSCodeMobile">
+        <item name="android:windowBackground">@color/vscode_bg</item>
+    </style>
+
+    <!-- Login activity theme -->
+    <style name="Theme.VSCodeMobile.Login" parent="Theme.VSCodeMobile">
+        <item name="android:windowBackground">@color/vscode_bg</item>
+    </style>
+
+    <!-- Transparent dialog style for view-mode bottom sheet -->
+    <style name="Theme.VSCodeMobile.BottomSheet" parent="Widget.MaterialComponents.BottomSheet">
+        <item name="backgroundTint">@color/vscode_sidebar_bg</item>
+    </style>
+
+</resources>

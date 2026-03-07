@@ -1,0 +1,11 @@
+<resources>
+    <!-- Standard dimensions -->
+    <dimen name="activity_bar_width">56dp</dimen>
+    <dimen name="tab_icon_size">24dp</dimen>
+    <dimen name="tab_icon_padding">12dp</dimen>
+    <dimen name="tab_label_size">10sp</dimen>
+    <dimen name="content_padding">16dp</dimen>
+    <dimen name="card_corner_radius">8dp</dimen>
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="codespace_card_elevation">2dp</dimen>
+</resources>
