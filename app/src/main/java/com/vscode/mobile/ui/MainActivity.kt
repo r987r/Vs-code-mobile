@@ -71,12 +71,12 @@ class MainActivity : AppCompatActivity() {
     /** All tab bindings in order (must match XML include IDs). */
     private val tabBindings: Map<CodespacePanel, ItemActivityTabBinding> by lazy {
         mapOf(
-            CodespacePanel.EXPLORER   to ItemActivityTabBinding.bind(binding.tabExplorer),
-            CodespacePanel.SEARCH     to ItemActivityTabBinding.bind(binding.tabSearch),
-            CodespacePanel.GIT        to ItemActivityTabBinding.bind(binding.tabGit),
-            CodespacePanel.EXTENSIONS to ItemActivityTabBinding.bind(binding.tabExtensions),
-            CodespacePanel.COPILOT    to ItemActivityTabBinding.bind(binding.tabCopilot),
-            CodespacePanel.TERMINAL   to ItemActivityTabBinding.bind(binding.tabTerminal),
+            CodespacePanel.EXPLORER   to binding.tabExplorer,
+            CodespacePanel.SEARCH     to binding.tabSearch,
+            CodespacePanel.GIT        to binding.tabGit,
+            CodespacePanel.EXTENSIONS to binding.tabExtensions,
+            CodespacePanel.COPILOT    to binding.tabCopilot,
+            CodespacePanel.TERMINAL   to binding.tabTerminal,
         )
     }
 
