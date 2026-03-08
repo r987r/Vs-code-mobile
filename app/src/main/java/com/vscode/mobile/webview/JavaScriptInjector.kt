@@ -55,8 +55,9 @@ object JavaScriptInjector {
                  * button inside the WebView.  Multiple selector strategies are
                  * tried so the script works across VS Code web versions.
                  *
-                 * @param {string} viewId   e.g. 'workbench.view.explorer'
-                 * @param {string} label    e.g. 'Explorer'
+                 * @param {string} viewId     e.g. 'workbench.view.explorer'
+                 * @param {string} label      e.g. 'Explorer'
+                 * @param {string} commandId  e.g. 'workbench.action.chat.open'
                  */
                 activatePanel: function(viewId, label, commandId) {
                     ${buildPanelActivationJs()}

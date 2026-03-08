@@ -95,6 +95,8 @@ class JavaScriptInjectorTest {
             script.contains("'workbench.panel.chat'"))
         assertTrue("Script should contain KeyI for Copilot shortcut",
             script.contains("KeyI"))
+        assertTrue("Script should contain commandId for fallback execution",
+            script.contains(CodespacePanel.COPILOT.commandId))
     }
 
     @Test
