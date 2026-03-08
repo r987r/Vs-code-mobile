@@ -57,8 +57,8 @@ jobs:
 
       - name: Write local.properties
         run: |
-          echo "GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
-          echo "GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
+          echo "GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
+          echo "GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -113,8 +113,8 @@ jobs:
 
       - name: Write local.properties
         run: |
-          echo "GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
-          echo "GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
+          echo "GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
+          echo "GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -152,8 +152,8 @@ jobs:
 
       - name: Write local.properties
         run: |
-          echo "GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
-          echo "GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
+          echo "GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
+          echo "GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -207,21 +207,21 @@ jobs:
 
       - name: Verify required secrets
         env:
-          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
+          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
         run: |
-          if [ -z "$GITHUB_CLIENT_ID" ] || [ -z "$GITHUB_CLIENT_SECRET" ]; then
-            echo "::error::GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET secrets must be set for release builds."
+          if [ -z "$GH_CLIENT_ID" ] || [ -z "$GH_CLIENT_SECRET" ]; then
+            echo "::error::GH_CLIENT_ID and GH_CLIENT_SECRET secrets must be set for release builds."
             exit 1
           fi
 
       - name: Write local.properties
         env:
-          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
+          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
         run: |
-          echo "GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID" >> local.properties
-          echo "GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET" >> local.properties
+          echo "GH_CLIENT_ID=$GH_CLIENT_ID" >> local.properties
+          echo "GH_CLIENT_SECRET=$GH_CLIENT_SECRET" >> local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

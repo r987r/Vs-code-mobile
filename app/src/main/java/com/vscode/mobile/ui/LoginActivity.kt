@@ -119,11 +119,11 @@ class LoginActivity : AppCompatActivity() {
 
     /**
      * Read the GitHub OAuth App Client ID.
-     * Set GITHUB_CLIENT_ID in local.properties; it is injected into BuildConfig
+     * Set GH_CLIENT_ID in local.properties; it is injected into BuildConfig
      * via the app/build.gradle buildConfigField.
      *
      * Example local.properties entry:
-     *   GITHUB_CLIENT_ID=Ov23liXXXXXXXXXX
+     *   GH_CLIENT_ID=Ov23liXXXXXXXXXX
      */
     private fun getClientId(): String = BuildConfig.GITHUB_CLIENT_ID
 

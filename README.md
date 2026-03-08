@@ -34,8 +34,8 @@ The app uses **GitHub OAuth** to authenticate users.  Before anyone can tap
 2. Add two new **Repository secrets**:
    | Secret name | Value |
    |---|---|
-   | `GITHUB_CLIENT_ID` | The Client ID from Step 1 |
-   | `GITHUB_CLIENT_SECRET` | The Client Secret from Step 1 |
+   | `GH_CLIENT_ID` | The Client ID from Step 1 |
+   | `GH_CLIENT_SECRET` | The Client Secret from Step 1 |
 3. **Push a commit** (or re-run the CI workflow) so the APK is rebuilt with the
    real credentials baked in via `BuildConfig`.
 
@@ -203,8 +203,8 @@ cp local.properties.example local.properties
 
 ```properties
 sdk.dir=/path/to/android-sdk
-GITHUB_CLIENT_ID=YOUR_GITHUB_CLIENT_ID_HERE
-GITHUB_CLIENT_SECRET=YOUR_GITHUB_CLIENT_SECRET_HERE
+GH_CLIENT_ID=YOUR_GITHUB_CLIENT_ID_HERE
+GH_CLIENT_SECRET=YOUR_GITHUB_CLIENT_SECRET_HERE
 ```
 
 > **Note:** In production, proxy the token exchange through your own backend to avoid
@@ -231,8 +231,8 @@ OAuth credentials in the CI build, add the following
 
 | Secret name           | Value                          |
 |-----------------------|--------------------------------|
-| `GITHUB_CLIENT_ID`    | Your GitHub OAuth App client ID |
-| `GITHUB_CLIENT_SECRET`| Your GitHub OAuth App secret   |
+| `GH_CLIENT_ID`    | Your GitHub OAuth App client ID |
+| `GH_CLIENT_SECRET`| Your GitHub OAuth App secret   |
 
 If these secrets are absent, the workflow still builds a placeholder APK (the
 `REPLACE_WITH_YOUR_CLIENT_ID` build-time default is used), which is useful for

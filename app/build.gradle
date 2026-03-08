@@ -23,17 +23,17 @@ android {
 
         // GitHub OAuth credentials — set in local.properties, never commit secrets.
         // Example local.properties:
-        //   GITHUB_CLIENT_ID=Ov23liXXXXXXXXXX
-        //   GITHUB_CLIENT_SECRET=your_secret_here
+        //   GH_CLIENT_ID=Ov23liXXXXXXXXXX
+        //   GH_CLIENT_SECRET=your_secret_here
         def localProps = new Properties()
         def localPropsFile = rootProject.file('local.properties')
         if (localPropsFile.exists()) {
             localPropsFile.withReader('UTF-8') { localProps.load(it) }
         }
         buildConfigField "String", "GITHUB_CLIENT_ID",
-            "\"${localProps.getProperty('GITHUB_CLIENT_ID', 'REPLACE_WITH_YOUR_CLIENT_ID')}\""
+            "\"${localProps.getProperty('GH_CLIENT_ID', 'REPLACE_WITH_YOUR_CLIENT_ID')}\""
         buildConfigField "String", "GITHUB_CLIENT_SECRET",
-            "\"${localProps.getProperty('GITHUB_CLIENT_SECRET', 'REPLACE_WITH_YOUR_CLIENT_SECRET')}\""
+            "\"${localProps.getProperty('GH_CLIENT_SECRET', 'REPLACE_WITH_YOUR_CLIENT_SECRET')}\""
     }
 
     buildTypes {
