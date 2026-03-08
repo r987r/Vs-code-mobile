@@ -32,7 +32,7 @@ enum class CodespacePanel(
     SEARCH("workbench.view.search", "workbench.view.search", "Search"),
     GIT("workbench.view.scm", "workbench.view.scm", "Source Control"),
     EXTENSIONS("workbench.view.extensions", "workbench.view.extensions", "Extensions"),
-    COPILOT("workbench.panel.chat", "workbench.panel.chat", "Chat"),
+    COPILOT("workbench.action.chat.open", "workbench.panel.chat", "Chat"),
     TERMINAL("workbench.action.terminal.toggleTerminal", "workbench.panel.terminal", "Terminal");
 
     companion object {

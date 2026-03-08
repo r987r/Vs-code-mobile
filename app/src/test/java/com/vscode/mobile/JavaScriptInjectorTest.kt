@@ -78,4 +78,58 @@ class JavaScriptInjectorTest {
         val script = JavaScriptInjector.buildSetViewModeScript(ViewMode.DESKTOP)
         assertTrue(script.contains("DESKTOP"))
     }
+
+    @Test
+    fun `copilot panel script contains chat panel id`() {
+        val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.COPILOT)
+        assertTrue("Script should contain copilot activityBarId",
+            script.contains(CodespacePanel.COPILOT.activityBarId))
+        assertTrue("Script should contain copilot label",
+            script.contains(CodespacePanel.COPILOT.displayLabel))
+    }
+
+    @Test
+    fun `copilot panel script contains keyboard shortcut`() {
+        val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.COPILOT)
+        assertTrue("Script should contain Copilot keyboard shortcut entry",
+            script.contains("'workbench.panel.chat'"))
+        assertTrue("Script should contain KeyI for Copilot shortcut",
+            script.contains("KeyI"))
+        assertTrue("Script should contain commandId for fallback execution",
+            script.contains(CodespacePanel.COPILOT.commandId))
+    }
+
+    @Test
+    fun `copilot panel script includes commandId`() {
+        val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.COPILOT)
+        assertTrue("Script should contain the commandId for fallback execution",
+            script.contains(CodespacePanel.COPILOT.commandId))
+    }
+
+    @Test
+    fun `activate panel script contains exclusive visibility logic`() {
+        val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.EXPLORER)
+        assertTrue("Script should determine if panel is sidebar",
+            script.contains("isSidebarPanel"))
+        assertTrue("Script should close competing bottom panel",
+            script.contains(".part.panel"))
+        assertTrue("Script should close competing sidebar",
+            script.contains(".part.sidebar"))
+    }
+
+    @Test
+    fun `activate panel script contains bottom panel selectors`() {
+        val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.COPILOT)
+        assertTrue("Script should have selectors for bottom panel items",
+            script.contains(".panel .action-item"))
+        assertTrue("Script should have pane-header selector",
+            script.contains(".pane-header"))
+    }
+
+    @Test
+    fun `keyboard shortcuts include altKey support`() {
+        val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.COPILOT)
+        assertTrue("Script should dispatch altKey in keyboard events",
+            script.contains("altKey"))
+    }
 }

@@ -55,10 +55,11 @@ object JavaScriptInjector {
                  * button inside the WebView.  Multiple selector strategies are
                  * tried so the script works across VS Code web versions.
                  *
-                 * @param {string} viewId   e.g. 'workbench.view.explorer'
-                 * @param {string} label    e.g. 'Explorer'
+                 * @param {string} viewId     e.g. 'workbench.view.explorer'
+                 * @param {string} label      e.g. 'Explorer'
+                 * @param {string} commandId  e.g. 'workbench.action.chat.open'
                  */
-                activatePanel: function(viewId, label) {
+                activatePanel: function(viewId, label, commandId) {
                     ${buildPanelActivationJs()}
                 },
 
@@ -129,6 +130,7 @@ object JavaScriptInjector {
         """
         (function() {
             var viewId = '${panel.activityBarId}';
+            var commandId = '${panel.commandId}';
             var label  = '${panel.displayLabel}';
             ${buildPanelActivationJs()}
         })();
@@ -145,7 +147,43 @@ object JavaScriptInjector {
      *  3. Fall back to legacy `require()` command service.
      */
     private fun buildPanelActivationJs(): String = """
-        // ── Strategy 1: click the real activity-bar button ──────────
+        // ── Determine panel type for exclusive visibility ──────────
+        var sidebarIds = [
+            'workbench.view.explorer',
+            'workbench.view.search',
+            'workbench.view.scm',
+            'workbench.view.extensions'
+        ];
+        var isSidebarPanel = sidebarIds.indexOf(viewId) !== -1;
+        var cmdId = typeof commandId !== 'undefined' ? commandId : viewId;
+
+        // ── Helper: dispatch a keyboard shortcut ───────────────────
+        function dispatchKey(key, code, keyCode, ctrl, shift, alt) {
+            var t = document.querySelector('.monaco-workbench') || document.body;
+            t.dispatchEvent(new KeyboardEvent('keydown', {
+                key: key, code: code, keyCode: keyCode, which: keyCode,
+                ctrlKey: !!ctrl, metaKey: !!ctrl,
+                shiftKey: !!shift, altKey: !!alt,
+                bubbles: true, cancelable: true
+            }));
+        }
+
+        // ── Close competing panel so only the tapped pane shows ───
+        try {
+            if (isSidebarPanel) {
+                var bp = document.querySelector('.part.panel');
+                if (bp && bp.clientHeight > 0 && getComputedStyle(bp).display !== 'none') {
+                    dispatchKey('j', 'KeyJ', 74, true, false, false);
+                }
+            } else {
+                var sb = document.querySelector('.part.sidebar');
+                if (sb && sb.clientWidth > 0 && getComputedStyle(sb).display !== 'none') {
+                    dispatchKey('b', 'KeyB', 66, true, false, false);
+                }
+            }
+        } catch(_) {}
+
+        // ── Strategy 1: click the real activity-bar / panel button ──
         var selectors = [
             '.activitybar [id="' + viewId + '"] .action-label',
             '.activitybar [id="' + viewId + '"]',
@@ -154,7 +192,11 @@ object JavaScriptInjector {
             '[role="tab"][aria-label*="' + label + '"]',
             '.actions-container .action-item[data-id="' + viewId + '"] .action-label',
             '.actions-container .action-item[data-id="' + viewId + '"]',
-            '[id="workbench.parts.activitybar"] [data-action-id="' + viewId + '"]'
+            '[id="workbench.parts.activitybar"] [data-action-id="' + viewId + '"]',
+            '.composite.title [aria-label*="' + label + '"]',
+            '.panel .action-item[data-id="' + viewId + '"]',
+            '.pane-header[aria-label*="' + label + '"]',
+            '.action-item a[aria-label*="' + label + '"]'
         ];
         for (var i = 0; i < selectors.length; i++) {
             try {
@@ -165,30 +207,29 @@ object JavaScriptInjector {
 
         // ── Strategy 2: dispatch keyboard shortcut ─────────────────
         var shortcuts = {
-            'workbench.view.explorer':    {key:'e',code:'KeyE',keyCode:69,ctrl:true,shift:true},
-            'workbench.view.search':      {key:'f',code:'KeyF',keyCode:70,ctrl:true,shift:true},
-            'workbench.view.scm':         {key:'g',code:'KeyG',keyCode:71,ctrl:true,shift:true},
-            'workbench.view.extensions':  {key:'x',code:'KeyX',keyCode:88,ctrl:true,shift:true},
+            'workbench.view.explorer':    {key:'e',code:'KeyE',keyCode:69,ctrl:true,shift:true,alt:false},
+            'workbench.view.search':      {key:'f',code:'KeyF',keyCode:70,ctrl:true,shift:true,alt:false},
+            'workbench.view.scm':         {key:'g',code:'KeyG',keyCode:71,ctrl:true,shift:true,alt:false},
+            'workbench.view.extensions':  {key:'x',code:'KeyX',keyCode:88,ctrl:true,shift:true,alt:false},
+            'workbench.panel.chat':       {key:'i',code:'KeyI',keyCode:73,ctrl:true,shift:false,alt:true},
             /* Both terminal IDs map to the same shortcut because the
                commandId and activityBarId differ for the Terminal panel. */
-            'workbench.action.terminal.toggleTerminal': {key:'`',code:'Backquote',keyCode:192,ctrl:true,shift:false},
-            'workbench.panel.terminal':   {key:'`',code:'Backquote',keyCode:192,ctrl:true,shift:false}
+            'workbench.action.terminal.toggleTerminal': {key:'`',code:'Backquote',keyCode:192,ctrl:true,shift:false,alt:false},
+            'workbench.panel.terminal':   {key:'`',code:'Backquote',keyCode:192,ctrl:true,shift:false,alt:false}
         };
         var sc = shortcuts[viewId];
         if (sc) {
-            var target = document.querySelector('.monaco-workbench') || document.body;
-            target.dispatchEvent(new KeyboardEvent('keydown', {
-                key: sc.key, code: sc.code, keyCode: sc.keyCode, which: sc.keyCode,
-                ctrlKey: !!sc.ctrl, metaKey: !!sc.ctrl,
-                shiftKey: !!sc.shift,
-                bubbles: true, cancelable: true
-            }));
+            dispatchKey(sc.key, sc.code, sc.keyCode, sc.ctrl, sc.shift, sc.alt);
+            return;
         }
 
         // ── Strategy 3: legacy require() command service ───────────
         try {
             var cmds = typeof require === 'function' && require('vs/workbench/services/commands/common/commandService');
-            if (cmds && cmds.executeCommand) cmds.executeCommand(viewId);
+            if (cmds && cmds.executeCommand) {
+                cmds.executeCommand(cmdId);
+                return;
+            }
         } catch(_) {}
     """.trimIndent()
 
