@@ -1,6 +1,5 @@
 package com.vscode.mobile
 
-import android.net.Uri
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

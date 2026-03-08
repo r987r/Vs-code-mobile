@@ -318,13 +318,8 @@ class MainActivity : AppCompatActivity() {
             binding.fabToggle.setImageResource(android.R.drawable.ic_menu_agenda)
             binding.fabToggle.contentDescription = getString(R.string.toggle_to_list)
         } else {
-            if (lastCodespaceUrl != null) {
-                binding.fabToggle.setImageResource(android.R.drawable.ic_menu_edit)
-                binding.fabToggle.contentDescription = getString(R.string.toggle_to_codespace)
-            } else {
-                binding.fabToggle.setImageResource(android.R.drawable.ic_menu_edit)
-                binding.fabToggle.contentDescription = getString(R.string.toggle_to_codespace)
-            }
+            binding.fabToggle.setImageResource(android.R.drawable.ic_menu_edit)
+            binding.fabToggle.contentDescription = getString(R.string.toggle_to_codespace)
         }
         // Only show FAB when there is somewhere to toggle to
         binding.fabToggle.visibility = if (isInCodespace || lastCodespaceUrl != null) {
