@@ -31,7 +31,7 @@ class JavaScriptInjectorTest {
     fun `desktop bootstrap has no activity bar override`() {
         val script = JavaScriptInjector.buildMobileBootstrap(ViewMode.DESKTOP)
         // In desktop mode, mobileCss is empty, so there should be no activitybar rule
-        assertFalse("Desktop mode should not hide activity bar", script.contains("display: none !important"))
+        assertFalse("Desktop mode should not have activitybar positioning", script.contains("left: -9999px"))
     }
 
     @Test
@@ -50,7 +50,20 @@ class JavaScriptInjectorTest {
     fun `activate panel script contains panel id`() {
         val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.TERMINAL)
         assertTrue(script.contains(CodespacePanel.TERMINAL.activityBarId))
-        assertTrue(script.contains("activatePanel"))
+    }
+
+    @Test
+    fun `activate panel script is self-contained`() {
+        // The script should work without window.VSCMobile being set up
+        val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.EXPLORER)
+        assertTrue("Script should contain selector strategy", script.contains("querySelector"))
+        assertTrue("Script should contain panel label", script.contains(CodespacePanel.EXPLORER.displayLabel))
+    }
+
+    @Test
+    fun `activate panel script contains keyboard shortcut fallback`() {
+        val script = JavaScriptInjector.buildActivatePanelScript(CodespacePanel.EXPLORER)
+        assertTrue("Script should contain keyboard shortcut dispatch", script.contains("KeyboardEvent"))
     }
 
     @Test

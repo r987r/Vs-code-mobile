@@ -286,7 +286,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onTabSelected(panel: CodespacePanel) {
-        if (panel == currentPanel) return
         setActiveTab(panel)
         binding.webView.evaluateJavascript(
             JavaScriptInjector.buildActivatePanelScript(panel), null

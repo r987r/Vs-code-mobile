@@ -51,24 +51,15 @@ object JavaScriptInjector {
             // ─── VSCMobile bridge (called from Kotlin via evaluateJavascript) ──
             window.VSCMobile = {
                 /**
-                 * Activate a VS Code panel by its view ID.
-                 * @param {string} viewId  e.g. 'workbench.view.explorer'
+                 * Activate a VS Code panel by clicking the real activity-bar
+                 * button inside the WebView.  Multiple selector strategies are
+                 * tried so the script works across VS Code web versions.
+                 *
+                 * @param {string} viewId   e.g. 'workbench.view.explorer'
+                 * @param {string} label    e.g. 'Explorer'
                  */
-                activatePanel: function(viewId) {
-                    try {
-                        // Attempt workbench command API (available in VS Code web)
-                        var commands = window.require && window.require('vs/workbench/services/commands/common/commandService');
-                        if (commands) {
-                            commands.executeCommand(viewId);
-                            return;
-                        }
-                    } catch(e) {}
-
-                    // Fallback: click the activity bar icon with matching data-id
-                    var btn = document.querySelector(
-                        '.actions-container .action-item[data-id="' + viewId + '"]'
-                    );
-                    if (btn) btn.click();
+                activatePanel: function(viewId, label) {
+                    ${buildPanelActivationJs()}
                 },
 
                 /**
@@ -103,8 +94,9 @@ object JavaScriptInjector {
         ".monaco-list-row { min-height: 44px; font-size: 15px; }",
         /* Wider scrollbars for touch */
         "::-webkit-scrollbar { width: 12px; height: 12px; }",
-        /* Hide the activity bar (we have our own) */
-        ".activitybar { display: none; }",
+        /* Move the activity bar off-screen but keep it in the DOM so
+           programmatic .click() still reaches the real buttons. */
+        ".activitybar { position: fixed !important; left: -9999px !important; top: -9999px !important; opacity: 0 !important; pointer-events: none !important; }",
         /* Collapse the left sidebar panel label strip */
         ".part.sidebar > .composite.title { display: none; }",
         /* Make editor font bigger */
@@ -127,10 +119,76 @@ object JavaScriptInjector {
     }
 
     /**
-     * Returns a JS snippet that activates a specific panel in VS Code.
+     * Returns a self-contained JS snippet that activates a specific panel
+     * in VS Code.  The snippet does **not** depend on the bootstrap having
+     * been injected first – it carries its own multi-strategy activation
+     * logic so that it works even if the user taps a tab before the
+     * 800 ms injection delay fires.
      */
     fun buildActivatePanelScript(panel: CodespacePanel): String =
-        "window.VSCMobile && window.VSCMobile.activatePanel('${panel.activityBarId}');"
+        """
+        (function() {
+            var viewId = '${panel.activityBarId}';
+            var label  = '${panel.displayLabel}';
+            ${buildPanelActivationJs()}
+        })();
+        """.trimIndent()
+
+    /**
+     * Shared JS body used by both the bootstrap bridge and the standalone
+     * panel-activation snippet.  It expects `viewId` and `label` to be in
+     * scope when evaluated.
+     *
+     * Strategies tried (in order):
+     *  1. Click the real activity-bar button (multiple selector patterns).
+     *  2. Dispatch the matching keyboard shortcut.
+     *  3. Fall back to legacy `require()` command service.
+     */
+    private fun buildPanelActivationJs(): String = """
+        // ── Strategy 1: click the real activity-bar button ──────────
+        var selectors = [
+            '.activitybar [id="' + viewId + '"] .action-label',
+            '.activitybar [id="' + viewId + '"]',
+            '.activitybar .action-item .action-label[aria-label*="' + label + '"]',
+            '.activitybar .action-item[aria-label*="' + label + '"]',
+            '[role="tab"][aria-label*="' + label + '"]',
+            '.actions-container .action-item[data-id="' + viewId + '"] .action-label',
+            '.actions-container .action-item[data-id="' + viewId + '"]',
+            '[id="workbench.parts.activitybar"] [data-action-id="' + viewId + '"]'
+        ];
+        for (var i = 0; i < selectors.length; i++) {
+            try {
+                var el = document.querySelector(selectors[i]);
+                if (el) { el.click(); return; }
+            } catch(_) {}
+        }
+
+        // ── Strategy 2: dispatch keyboard shortcut ─────────────────
+        var shortcuts = {
+            'workbench.view.explorer':    {key:'e',code:'KeyE',keyCode:69,ctrl:true,shift:true},
+            'workbench.view.search':      {key:'f',code:'KeyF',keyCode:70,ctrl:true,shift:true},
+            'workbench.view.scm':         {key:'g',code:'KeyG',keyCode:71,ctrl:true,shift:true},
+            'workbench.view.extensions':  {key:'x',code:'KeyX',keyCode:88,ctrl:true,shift:true},
+            'workbench.action.terminal.toggleTerminal': {key:'`',code:'Backquote',keyCode:192,ctrl:true,shift:false},
+            'workbench.panel.terminal':   {key:'`',code:'Backquote',keyCode:192,ctrl:true,shift:false}
+        };
+        var sc = shortcuts[viewId];
+        if (sc) {
+            var target = document.querySelector('.monaco-workbench') || document.body;
+            target.dispatchEvent(new KeyboardEvent('keydown', {
+                key: sc.key, code: sc.code, keyCode: sc.keyCode, which: sc.keyCode,
+                ctrlKey: !!sc.ctrl, metaKey: !!sc.ctrl,
+                shiftKey: !!sc.shift,
+                bubbles: true, cancelable: true
+            }));
+        }
+
+        // ── Strategy 3: legacy require() command service ───────────
+        try {
+            var cmds = typeof require === 'function' && require('vs/workbench/services/commands/common/commandService');
+            if (cmds && cmds.executeCommand) cmds.executeCommand(viewId);
+        } catch(_) {}
+    """.trimIndent()
 
     /**
      * Returns a JS snippet that switches the in-page view mode.
