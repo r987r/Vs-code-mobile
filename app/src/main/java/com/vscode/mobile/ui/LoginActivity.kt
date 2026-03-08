@@ -76,6 +76,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun startAuthFlow() {
+        if (!isClientIdConfigured()) {
+            showError(getString(R.string.error_client_id_not_configured))
+            return
+        }
         setLoading(true)
         try {
             val intent = authManager.buildAuthIntent(getClientId())
@@ -86,6 +90,13 @@ class LoginActivity : AppCompatActivity() {
             setLoading(false)
         }
     }
+
+    /**
+     * Returns true only when a real client ID has been injected at build time.
+     * The placeholder value means local.properties / CI secrets were not configured.
+     */
+    private fun isClientIdConfigured(): Boolean =
+        BuildConfig.GITHUB_CLIENT_ID != "REPLACE_WITH_YOUR_CLIENT_ID"
 
     // onActivityResult removed — handled by authLauncher above
 
