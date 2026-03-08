@@ -76,6 +76,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun startAuthFlow() {
+        if (!isClientIdConfigured()) {
+            showError(getString(R.string.error_client_id_not_configured))
+            return
+        }
         setLoading(true)
         try {
             val intent = authManager.buildAuthIntent(getClientId())
@@ -86,6 +90,13 @@ class LoginActivity : AppCompatActivity() {
             setLoading(false)
         }
     }
+
+    /**
+     * Returns true only when a real client ID has been injected at build time.
+     * The placeholder value means local.properties / CI secrets were not configured.
+     */
+    private fun isClientIdConfigured(): Boolean =
+        BuildConfig.GITHUB_CLIENT_ID != "REPLACE_WITH_YOUR_CLIENT_ID"
 
     // onActivityResult removed — handled by authLauncher above
 
@@ -108,11 +119,11 @@ class LoginActivity : AppCompatActivity() {
 
     /**
      * Read the GitHub OAuth App Client ID.
-     * Set GITHUB_CLIENT_ID in local.properties; it is injected into BuildConfig
+     * Set GH_CLIENT_ID in local.properties; it is injected into BuildConfig
      * via the app/build.gradle buildConfigField.
      *
      * Example local.properties entry:
-     *   GITHUB_CLIENT_ID=Ov23liXXXXXXXXXX
+     *   GH_CLIENT_ID=Ov23liXXXXXXXXXX
      */
     private fun getClientId(): String = BuildConfig.GITHUB_CLIENT_ID
 

@@ -8,6 +8,49 @@ Mobile / Desktop view mode.
 
 ---
 
+## ⚠️ One-time setup required before sign-in works
+
+The app uses **GitHub OAuth** to authenticate users.  Before anyone can tap
+"Sign in with GitHub" and actually log in, the **repository owner** must:
+
+### Step 1 — Register a GitHub OAuth App
+
+1. Go to **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App**
+   (direct link: <https://github.com/settings/developers>).
+2. Fill in the form:
+   | Field | Value |
+   |---|---|
+   | Application name | `VS Code Mobile` (or any name you like) |
+   | Homepage URL | `https://github.com/YOUR_USERNAME/Vs-code-mobile` (or your fork URL) |
+   | Authorization callback URL | **`com.vscode.mobile://oauth2redirect`** (exact value, no trailing slash) |
+3. Click **Register application**.
+4. On the next page, copy your **Client ID**.
+5. Click **Generate a new client secret** and copy the secret immediately
+   (GitHub shows it only once).
+
+### Step 2 — Add the credentials as repository secrets
+
+1. In this repository, go to **Settings → Secrets and variables → Actions**.
+2. Add two new **Repository secrets**:
+   | Secret name | Value |
+   |---|---|
+   | `GH_CLIENT_ID` | The Client ID from Step 1 |
+   | `GH_CLIENT_SECRET` | The Client Secret from Step 1 |
+3. **Push a commit** (or re-run the CI workflow) so the APK is rebuilt with the
+   real credentials baked in via `BuildConfig`.
+
+> **Why is this needed?**
+> The OAuth client ID is embedded in the app at build time.  The CI workflow
+> reads these secrets and injects them into the build.  Without real credentials,
+> the build uses a placeholder and sign-in will show an error message instead of
+> opening the GitHub login page.
+
+> **Note:** In a production app you would proxy the token exchange through your
+> own backend so the client secret is never shipped in the APK.  See the
+> [Security design](#security-design) section for details.
+
+---
+
 ## Quick start — download & sideload the app
 
 Every push to `main` automatically runs **secret scanning, Android Lint, unit tests,
@@ -160,8 +203,8 @@ cp local.properties.example local.properties
 
 ```properties
 sdk.dir=/path/to/android-sdk
-GITHUB_CLIENT_ID=YOUR_GITHUB_CLIENT_ID_HERE
-GITHUB_CLIENT_SECRET=YOUR_GITHUB_CLIENT_SECRET_HERE
+GH_CLIENT_ID=YOUR_GITHUB_CLIENT_ID_HERE
+GH_CLIENT_SECRET=YOUR_GITHUB_CLIENT_SECRET_HERE
 ```
 
 > **Note:** In production, proxy the token exchange through your own backend to avoid
@@ -188,8 +231,8 @@ OAuth credentials in the CI build, add the following
 
 | Secret name           | Value                          |
 |-----------------------|--------------------------------|
-| `GITHUB_CLIENT_ID`    | Your GitHub OAuth App client ID |
-| `GITHUB_CLIENT_SECRET`| Your GitHub OAuth App secret   |
+| `GH_CLIENT_ID`    | Your GitHub OAuth App client ID |
+| `GH_CLIENT_SECRET`| Your GitHub OAuth App secret   |
 
 If these secrets are absent, the workflow still builds a placeholder APK (the
 `REPLACE_WITH_YOUR_CLIENT_ID` build-time default is used), which is useful for
