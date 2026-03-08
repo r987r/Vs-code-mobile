@@ -84,7 +84,6 @@ class GitHubAuthManager(
      */
     fun handleAuthResponse(
         data: Intent?,
-        clientId: String,
         clientSecret: String,
         onSuccess: (accessToken: String) -> Unit,
         onError: (message: String) -> Unit
