@@ -176,6 +176,7 @@
         android:gravity="center_vertical"
         android:paddingHorizontal="12dp"
         android:orientation="horizontal"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -198,5 +199,19 @@
             android:fontFamily="monospace" />
 
     </LinearLayout>
+
+    <!-- Toggle FAB: switch between codespace list and active codespace -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_menu_agenda"
+        android:contentDescription="@string/toggle_to_list"
+        android:visibility="gone"
+        app:backgroundTint="@color/vscode_accent"
+        app:tint="@color/white"
+        app:layout_constraintBottom_toTopOf="@id/statusBar"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

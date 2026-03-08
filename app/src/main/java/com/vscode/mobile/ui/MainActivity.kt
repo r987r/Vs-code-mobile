@@ -20,7 +20,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import com.vscode.mobile.BuildConfig
 import com.vscode.mobile.R
-import com.vscode.mobile.auth.SecureTokenStorage
 import com.vscode.mobile.databinding.ActivityMainBinding
 import com.vscode.mobile.databinding.BottomSheetViewModeBinding
 import com.vscode.mobile.databinding.ItemActivityTabBinding
@@ -32,43 +31,61 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Main Codespace viewer.
+ * Single-activity Codespace viewer.
+ *
+ * No OAuth credentials needed — the user signs in via GitHub's web UI
+ * directly inside the WebView. Cookies persist across sessions so the
+ * user stays signed in.
+ *
+ * The app detects the current page from the URL:
+ *   - Codespace list  → hides the Activity Bar, shows a standard toolbar
+ *   - Active codespace → shows the VS Code Activity Bar + view-mode toggle
+ *
+ * A toggle FAB lets the user switch between the codespace list and the
+ * last-visited codespace (and vice-versa).
  *
  * Layout:
  *   ┌──────────────────────────────────────────┐
- *   │ Toolbar (codespace name + menu)          │
+ *   │ Toolbar (page title + menu)              │
  *   ├───────┬──────────────────────────────────┤
- *   │ Left  │  WebView (VS Code web)           │
+ *   │ Left  │  WebView (GitHub / VS Code web)  │
  *   │ Tab   │                                  │
  *   │ Bar   │                                  │
  *   │       │                                  │
  *   └───────┴──────────────────────────────────┘
  *   │ Status bar                               │
  *   └──────────────────────────────────────────┘
- *
- * Security:
- *  - JavaScript is only enabled for trusted GitHub/Codespaces domains.
- *  - Mixed-content blocked; file/data URIs disallowed.
- *  - DOM storage disabled; third-party cookies blocked.
- *  - All SSL errors result in a hard block (via [CodespacesWebViewClient]).
+ *           [Toggle FAB]
  */
 class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
-        const val EXTRA_CODESPACE_URL = "extra_codespace_url"
-        const val EXTRA_CODESPACE_NAME = "extra_codespace_name"
+
+        /** Entry point: the GitHub Codespaces dashboard. */
+        const val CODESPACES_LIST_URL = "https://github.com/codespaces"
+
+        /** URL patterns that indicate we are inside a live codespace. */
+        private val CODESPACE_URL_PATTERNS = listOf(
+            ".github.dev",
+            ".app.github.dev",
+            ".githubpreview.dev"
+        )
     }
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var tokenStorage: SecureTokenStorage
 
     private var currentViewMode = ViewMode.MOBILE
     private var currentPanel = CodespacePanel.EXPLORER
 
+    /** Remembers the last codespace URL so the toggle can jump back. */
+    private var lastCodespaceUrl: String? = null
+
+    /** Whether the WebView is currently showing a live codespace. */
+    private var isInCodespace = false
+
     // ── Tab binding helpers ────────────────────────────────────────────────────
 
-    /** All tab bindings in order (must match XML include IDs). */
     private val tabBindings: Map<CodespacePanel, ItemActivityTabBinding> by lazy {
         mapOf(
             CodespacePanel.EXPLORER   to binding.tabExplorer,
@@ -88,24 +105,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        tokenStorage = SecureTokenStorage(applicationContext)
-
-        val codespaceUrl = intent.getStringExtra(EXTRA_CODESPACE_URL) ?: run {
-            finish()
-            return
-        }
-        val codespaceName = intent.getStringExtra(EXTRA_CODESPACE_NAME) ?: codespaceUrl
-
-        binding.toolbar.title = codespaceName
-        binding.tvStatusLeft.text = "⚡ $codespaceName"
-        binding.tvStatusRight.text = currentViewMode.name.lowercase().replaceFirstChar { it.uppercase() }
 
         setupWebView()
         setupActivityBar()
+        setupToggleFab()
         setupBackNavigation()
-        loadCodespace(codespaceUrl)
+
+        // Load the codespace list — user signs in via GitHub web if needed
+        loadUrl(CODESPACES_LIST_URL)
     }
 
     private fun setupBackNavigation() {
@@ -128,72 +135,133 @@ class MainActivity : AppCompatActivity() {
         val webView = binding.webView
 
         webView.settings.apply {
-            // JavaScript MUST be enabled for VS Code web to function
             javaScriptEnabled = true
-
-            // ── Security hardening ──────────────────────────────────
-            // Allow DOM storage so VS Code can persist workspace state
             domStorageEnabled = true
-            // Block mixed content (HTTP resources on HTTPS pages)
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-            // Disallow loading content from file:// and content:// URIs
             allowFileAccess = false
             allowContentAccess = false
-            // Disable geolocation by default
             setGeolocationEnabled(false)
-            // Disable saving form data
+            @Suppress("DEPRECATION")
             saveFormData = false
-            // Do not cache credentials
+            @Suppress("DEPRECATION")
             savePassword = false
-
-            // ── Viewport / rendering ────────────────────────────────
             useWideViewPort = true
             loadWithOverviewMode = true
             setSupportZoom(true)
             builtInZoomControls = true
             displayZoomControls = false
-
-            // Mobile user-agent in MOBILE mode so the page adapts
             userAgentString = buildUserAgent()
         }
 
-        // Block third-party cookies
+        // Accept cookies so the GitHub session persists across app launches
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
             setAcceptThirdPartyCookies(webView, false)
         }
 
-        // In debug builds only — enables Chrome DevTools remote debugging
         if (BuildConfig.DEBUG) {
             WebView.setWebContentsDebuggingEnabled(true)
         }
 
         webView.webViewClient = CodespacesWebViewClient(
-            onPageStarted = { _ -> showLoading(true) },
-            onPageFinished = { _ -> showLoading(false) },
+            onPageStarted = { _ ->
+                runOnUiThread { showLoading(true) }
+            },
+            onPageFinished = { url ->
+                runOnUiThread {
+                    showLoading(false)
+                    onPageChanged(url)
+                }
+            },
             onPageError = { _, description, _ -> showError(description) },
             onBlockedNavigation = { url ->
-                // Open blocked URLs in the system browser
                 runOnUiThread { openInSystemBrowser(url) }
             },
             onInjectJavaScript = { wv -> injectMobileJs(wv) }
         )
 
         webView.webChromeClient = object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView, newProgress: Int) {
-                // Could drive a progress bar here
+            override fun onReceivedTitle(view: WebView, title: String?) {
+                runOnUiThread { updateToolbarFromMetadata(title, view.url) }
             }
         }
     }
 
     private fun buildUserAgent(): String {
-        // Build a dynamic user agent that reflects the device's actual OS version
         val androidVersion = Build.VERSION.RELEASE
-        val chromeVersion = "121.0.0.0" // Approximate; kept for server compatibility
+        val chromeVersion = "121.0.0.0"
         return "Mozilla/5.0 (Linux; Android $androidVersion; Mobile) " +
                 "AppleWebKit/537.36 (KHTML, like Gecko) " +
                 "Chrome/$chromeVersion Mobile Safari/537.36 " +
                 "VSCodeMobile/1.0"
+    }
+
+    // ── Page change detection ──────────────────────────────────────────────────
+
+    /**
+     * Called after every page load. Inspects the URL to decide whether
+     * the user is on the codespace list or inside a live codespace,
+     * then toggles the Activity Bar and FAB accordingly.
+     */
+    private fun onPageChanged(url: String) {
+        isInCodespace = isCodespaceUrl(url)
+
+        if (isInCodespace) {
+            lastCodespaceUrl = url
+        }
+
+        // Show / hide Activity Bar
+        binding.activityBar.visibility = if (isInCodespace) View.VISIBLE else View.GONE
+
+        // Update toggle FAB icon & description
+        updateToggleFab()
+
+        // Update status bar
+        if (isInCodespace) {
+            val name = extractCodespaceName(url)
+            binding.tvStatusLeft.text = "⚡ $name"
+            binding.tvStatusRight.text = currentViewMode.name.lowercase()
+                .replaceFirstChar { it.uppercase() }
+            binding.statusBar.visibility = View.VISIBLE
+        } else {
+            binding.statusBar.visibility = View.GONE
+        }
+
+        // Invalidate options menu so view-mode item shows/hides correctly
+        invalidateOptionsMenu()
+    }
+
+    /** Returns true when the URL belongs to a live codespace (*.github.dev, etc.). */
+    internal fun isCodespaceUrl(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        val host = try { Uri.parse(url).host } catch (_: Exception) { null } ?: return false
+        return CODESPACE_URL_PATTERNS.any { pattern -> host.endsWith(pattern) }
+    }
+
+    /** Extracts a human-readable codespace name from the URL. */
+    private fun extractCodespaceName(url: String): String {
+        return try {
+            val host = Uri.parse(url).host ?: return url
+            // e.g. "my-codespace-abc123.github.dev" → "my-codespace-abc123"
+            host.substringBefore(".")
+        } catch (_: Exception) {
+            url
+        }
+    }
+
+    /** Parses the page title and URL to update the toolbar. */
+    private fun updateToolbarFromMetadata(title: String?, url: String?) {
+        val toolbar = binding.toolbar
+        if (isCodespaceUrl(url)) {
+            toolbar.title = title?.takeIf { it.isNotBlank() } ?: extractCodespaceName(url ?: "")
+            toolbar.subtitle = getString(R.string.codespace_active)
+        } else if (url?.contains("github.com/login") == true) {
+            toolbar.title = getString(R.string.sign_in_title)
+            toolbar.subtitle = null
+        } else {
+            toolbar.title = title?.takeIf { it.isNotBlank() } ?: getString(R.string.codespaces_title)
+            toolbar.subtitle = null
+        }
     }
 
     // ── Tab / Activity Bar setup ───────────────────────────────────────────────
@@ -206,7 +274,6 @@ class MainActivity : AppCompatActivity() {
         configureTab(CodespacePanel.COPILOT, R.drawable.ic_tab_copilot, getString(R.string.tab_copilot))
         configureTab(CodespacePanel.TERMINAL, R.drawable.ic_tab_terminal, getString(R.string.tab_terminal))
 
-        // Select Explorer by default
         setActiveTab(CodespacePanel.EXPLORER)
     }
 
@@ -221,7 +288,6 @@ class MainActivity : AppCompatActivity() {
     private fun onTabSelected(panel: CodespacePanel) {
         if (panel == currentPanel) return
         setActiveTab(panel)
-        // Tell VS Code web to switch panels via JS
         binding.webView.evaluateJavascript(
             JavaScriptInjector.buildActivatePanelScript(panel), null
         )
@@ -236,6 +302,39 @@ class MainActivity : AppCompatActivity() {
                 getColor(if (isActive) R.color.vscode_icon_active else R.color.vscode_icon_inactive)
             )
             tb.root.background = if (isActive) getDrawable(R.drawable.tab_active_bg) else null
+        }
+    }
+
+    // ── Toggle FAB ─────────────────────────────────────────────────────────────
+
+    private fun setupToggleFab() {
+        binding.fabToggle.setOnClickListener { toggleView() }
+        updateToggleFab()
+    }
+
+    /** Updates the FAB icon and content description based on the current state. */
+    private fun updateToggleFab() {
+        if (isInCodespace) {
+            binding.fabToggle.setImageResource(android.R.drawable.ic_menu_agenda)
+            binding.fabToggle.contentDescription = getString(R.string.toggle_to_list)
+        } else {
+            binding.fabToggle.setImageResource(android.R.drawable.ic_menu_edit)
+            binding.fabToggle.contentDescription = getString(R.string.toggle_to_codespace)
+        }
+        // Only show FAB when there is somewhere to toggle to
+        binding.fabToggle.visibility = if (isInCodespace || lastCodespaceUrl != null) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+    }
+
+    /** Switches between the codespace list and the last-visited codespace. */
+    private fun toggleView() {
+        if (isInCodespace) {
+            loadUrl(CODESPACES_LIST_URL)
+        } else if (lastCodespaceUrl != null) {
+            loadUrl(lastCodespaceUrl!!)
         }
     }
 
@@ -260,7 +359,7 @@ class MainActivity : AppCompatActivity() {
 
     // ── Navigation ─────────────────────────────────────────────────────────────
 
-    private fun loadCodespace(url: String) {
+    private fun loadUrl(url: String) {
         showLoading(true)
         binding.webView.loadUrl(url)
     }
@@ -276,8 +375,8 @@ class MainActivity : AppCompatActivity() {
     // ── JS injection ───────────────────────────────────────────────────────────
 
     private fun injectMobileJs(webView: WebView) {
+        if (!isCodespaceUrl(webView.url)) return
         lifecycleScope.launch {
-            // Small delay to let the VS Code workbench boot before we mutate its DOM
             delay(800L)
             val script = JavaScriptInjector.buildMobileBootstrap(currentViewMode)
             webView.evaluateJavascript(script, null)
@@ -290,7 +389,6 @@ class MainActivity : AppCompatActivity() {
         val dialog = BottomSheetDialog(this)
         val sheetBinding = BottomSheetViewModeBinding.inflate(layoutInflater)
 
-        // Pre-select current mode
         sheetBinding.radioMobile.isChecked = currentViewMode == ViewMode.MOBILE
         sheetBinding.radioDesktop.isChecked = currentViewMode == ViewMode.DESKTOP
 
@@ -318,12 +416,10 @@ class MainActivity : AppCompatActivity() {
         currentViewMode = mode
         binding.tvStatusRight.text = mode.name.lowercase().replaceFirstChar { it.uppercase() }
 
-        // Apply changes via JS without reloading
         binding.webView.evaluateJavascript(
             JavaScriptInjector.buildSetViewModeScript(mode), null
         )
 
-        // Re-inject the full bootstrap with the new mode so CSS overrides are refreshed
         injectMobileJs(binding.webView)
 
         Snackbar.make(
@@ -340,6 +436,12 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        menu.findItem(R.id.action_view_mode)?.isVisible = isInCodespace
+        menu.findItem(R.id.action_clear_session)?.isVisible = true
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         android.R.id.home -> {
             onBackPressedDispatcher.onBackPressed()
@@ -349,7 +451,25 @@ class MainActivity : AppCompatActivity() {
             showViewModeSheet()
             true
         }
+        R.id.action_clear_session -> {
+            clearSessionAndReload()
+            true
+        }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    /**
+     * Clears all cookies (signs the user out of GitHub in the WebView)
+     * and reloads the codespace list page.
+     */
+    private fun clearSessionAndReload() {
+        CookieManager.getInstance().removeAllCookies { _ ->
+            runOnUiThread {
+                lastCodespaceUrl = null
+                isInCodespace = false
+                loadUrl(CODESPACES_LIST_URL)
+            }
+        }
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -357,6 +477,8 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         binding.webView.onPause()
+        // Flush cookies so the session persists if the app is killed
+        CookieManager.getInstance().flush()
     }
 
     override fun onResume() {
@@ -365,7 +487,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // Destroy the WebView to release resources and clear in-memory cookies/sessions
         binding.webView.stopLoading()
         binding.webView.destroy()
         super.onDestroy()

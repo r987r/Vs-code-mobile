@@ -37,7 +37,7 @@ jobs:
 
   # ── Android Lint & static analysis ────────────────────────────────────────
   # Runs 500+ Android-specific checks including security misconfigurations,
-  # hardcoded credentials, insecure WebView settings, and code correctness.
+  # insecure WebView settings, and code correctness.
   lint:
     name: Android Lint
     runs-on: ubuntu-latest
@@ -54,14 +54,6 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: gradle
-
-      - name: Write local.properties
-        env:
-          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-        run: |
-          echo "GH_CLIENT_ID=${GH_CLIENT_ID:-REPLACE_WITH_YOUR_CLIENT_ID}" >> local.properties
-          echo "GH_CLIENT_SECRET=${GH_CLIENT_SECRET:-REPLACE_WITH_YOUR_CLIENT_SECRET}" >> local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -114,14 +106,6 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Write local.properties
-        env:
-          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-        run: |
-          echo "GH_CLIENT_ID=${GH_CLIENT_ID:-REPLACE_WITH_YOUR_CLIENT_ID}" >> local.properties
-          echo "GH_CLIENT_SECRET=${GH_CLIENT_SECRET:-REPLACE_WITH_YOUR_CLIENT_SECRET}" >> local.properties
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -156,14 +140,6 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Write local.properties
-        env:
-          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-        run: |
-          echo "GH_CLIENT_ID=${GH_CLIENT_ID:-REPLACE_WITH_YOUR_CLIENT_ID}" >> local.properties
-          echo "GH_CLIENT_SECRET=${GH_CLIENT_SECRET:-REPLACE_WITH_YOUR_CLIENT_SECRET}" >> local.properties
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -172,8 +148,6 @@ jobs:
 
       # Generate a SHA-256 checksum so you can verify the downloaded APK hasn't been tampered with.
       - name: Generate APK checksum
-        env:
-          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
         run: |
           cd app/build/outputs/apk/debug
           sha256sum app-debug.apk > app-debug.apk.sha256
@@ -183,15 +157,6 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "Verify integrity on your computer before installing:" >> $GITHUB_STEP_SUMMARY
           echo '`sha256sum -c app-debug.apk.sha256`' >> $GITHUB_STEP_SUMMARY
-          if [ -z "${GH_CLIENT_ID}" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ⚠️ OAuth credentials not configured" >> $GITHUB_STEP_SUMMARY
-            echo "This APK was built **without** GitHub OAuth credentials." >> $GITHUB_STEP_SUMMARY
-            echo "The 'Sign in with GitHub' button will show an error when tapped." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "To build an APK with working sign-in, add **GH_CLIENT_ID** and **GH_CLIENT_SECRET**" >> $GITHUB_STEP_SUMMARY
-            echo "as [repository secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)." >> $GITHUB_STEP_SUMMARY
-          fi
 
       - name: Upload debug APK + checksum
         uses: actions/upload-artifact@v4
@@ -224,24 +189,6 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: gradle
-
-      - name: Verify required secrets
-        env:
-          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-        run: |
-          if [ -z "$GH_CLIENT_ID" ] || [ -z "$GH_CLIENT_SECRET" ]; then
-            echo "::error::GH_CLIENT_ID and GH_CLIENT_SECRET secrets must be set for release builds."
-            exit 1
-          fi
-
-      - name: Write local.properties
-        env:
-          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-        run: |
-          echo "GH_CLIENT_ID=$GH_CLIENT_ID" >> local.properties
-          echo "GH_CLIENT_SECRET=$GH_CLIENT_SECRET" >> local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

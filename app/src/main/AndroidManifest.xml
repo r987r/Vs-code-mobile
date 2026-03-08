@@ -3,8 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
     <application
         android:allowBackup="false"
@@ -30,33 +28,12 @@
             </intent-filter>
         </activity>
 
-        <!-- Login / Auth Activity -->
-        <activity
-            android:name=".ui.LoginActivity"
-            android:exported="false"
-            android:launchMode="singleTop" />
-
         <!-- Main Codespaces Activity -->
         <activity
             android:name=".ui.MainActivity"
             android:exported="false"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize" />
-
-        <!-- OAuth2 redirect handler for AppAuth -->
-        <activity
-            android:name="net.openid.appauth.RedirectUriReceiverActivity"
-            android:exported="true"
-            tools:node="replace">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="${appAuthRedirectScheme}"
-                    android:host="oauth2redirect" />
-            </intent-filter>
-        </activity>
 
     </application>
 

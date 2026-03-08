@@ -1,24 +1,13 @@
 <resources>
     <string name="app_name">VS Code Mobile</string>
 
-    <!-- Auth -->
-    <string name="login_title">Sign in with GitHub</string>
-    <string name="login_subtitle">Access your Codespaces on the go</string>
-    <string name="btn_sign_in">Sign in with GitHub</string>
-    <string name="signing_in">Signing in…</string>
-    <string name="sign_out">Sign out</string>
-    <string name="auth_error_title">Sign-in Failed</string>
-    <string name="auth_error_message">Unable to complete sign-in. Please try again.</string>
-    <string name="auth_cancel">Cancel</string>
+    <!-- Navigation -->
+    <string name="sign_in_title">Sign in to GitHub</string>
+    <string name="codespace_active">Codespace</string>
+    <string name="clear_session">Clear session &amp; sign out</string>
 
     <!-- Codespaces list -->
     <string name="codespaces_title">My Codespaces</string>
-    <string name="loading_codespaces">Loading codespaces…</string>
-    <string name="no_codespaces">No codespaces found.\nCreate one on github.com to get started.</string>
-    <string name="error_loading_codespaces">Failed to load codespaces. Pull down to retry.</string>
-    <string name="open_codespace">Open</string>
-    <string name="create_codespace">Create new codespace</string>
-    <string name="refresh">Refresh</string>
 
     <!-- Main viewer tabs -->
     <string name="tab_explorer">Explorer</string>
@@ -38,6 +27,10 @@
     <string name="apply">Apply</string>
     <string name="cancel">Cancel</string>
 
+    <!-- Toggle FAB -->
+    <string name="toggle_to_list">Back to codespace list</string>
+    <string name="toggle_to_codespace">Return to codespace</string>
+
     <!-- Navigation / Menu -->
     <string name="menu_view_mode">View Mode</string>
     <string name="menu_settings">Settings</string>
@@ -47,9 +40,6 @@
     <!-- Errors -->
     <string name="error_network">No internet connection</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>
-    <string name="error_session_expired">Your session has expired. Please sign in again.</string>
-    <string name="error_client_id_not_configured">Sign-in is not available. The app has not been configured with GitHub OAuth credentials. Please contact the repository owner or see the README for setup instructions.</string>
-    <string name="error_client_secret_not_configured">Sign-in is not available. The app has not been configured with a GitHub OAuth client secret. Please contact the repository owner or see the README for setup instructions.</string>
     <string name="retry">Retry</string>
 
     <!-- Content descriptions (accessibility) -->

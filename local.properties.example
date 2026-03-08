@@ -6,9 +6,3 @@
 # sdk.dir=/Users/yourname/Library/Android/sdk      # macOS
 # sdk.dir=/home/yourname/Android/Sdk               # Linux
 # sdk.dir=C\:\\Users\\yourname\\AppData\\Local\\Android\\Sdk  # Windows
-
-# GitHub OAuth App credentials.
-# Register at: GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
-# Callback URL: com.vscode.mobile://oauth2redirect
-GH_CLIENT_ID=YOUR_GITHUB_CLIENT_ID_HERE
-GH_CLIENT_SECRET=YOUR_GITHUB_CLIENT_SECRET_HERE
