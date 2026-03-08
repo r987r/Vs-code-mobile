@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.vscode.mobile.BuildConfig
 import com.vscode.mobile.R
 import com.vscode.mobile.auth.GitHubAuthManager
+import com.vscode.mobile.auth.GitHubCredentialsValidator
 import com.vscode.mobile.auth.SecureTokenStorage
 import com.vscode.mobile.databinding.ActivityLoginBinding
 
@@ -41,16 +42,21 @@ class LoginActivity : AppCompatActivity() {
     ) { result: ActivityResult ->
         authManager.handleAuthResponse(
             data = result.data,
-            clientId = getClientId(),
             clientSecret = getClientSecret(),
             onSuccess = { _ ->
-                setLoading(false)
-                navigateToList()
+                runOnUiThread {
+                    if (!isFinishing && !isDestroyed) {
+                        setLoading(false)
+                        navigateToList()
+                    }
+                }
             },
             onError = { message ->
                 runOnUiThread {
-                    setLoading(false)
-                    showError(message)
+                    if (!isFinishing && !isDestroyed) {
+                        setLoading(false)
+                        showError(message)
+                    }
                 }
             }
         )
@@ -80,6 +86,10 @@ class LoginActivity : AppCompatActivity() {
             showError(getString(R.string.error_client_id_not_configured))
             return
         }
+        if (!isClientSecretConfigured()) {
+            showError(getString(R.string.error_client_secret_not_configured))
+            return
+        }
         setLoading(true)
         try {
             val intent = authManager.buildAuthIntent(getClientId())
@@ -96,7 +106,10 @@ class LoginActivity : AppCompatActivity() {
      * The placeholder value means local.properties / CI secrets were not configured.
      */
     private fun isClientIdConfigured(): Boolean =
-        BuildConfig.GITHUB_CLIENT_ID != "REPLACE_WITH_YOUR_CLIENT_ID"
+        GitHubCredentialsValidator.isClientIdValid(BuildConfig.GITHUB_CLIENT_ID)
+
+    private fun isClientSecretConfigured(): Boolean =
+        GitHubCredentialsValidator.isClientSecretValid(BuildConfig.GITHUB_CLIENT_SECRET)
 
     // onActivityResult removed — handled by authLauncher above
 
