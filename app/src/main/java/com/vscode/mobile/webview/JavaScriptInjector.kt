@@ -169,6 +169,8 @@ object JavaScriptInjector {
             'workbench.view.search':      {key:'f',code:'KeyF',keyCode:70,ctrl:true,shift:true},
             'workbench.view.scm':         {key:'g',code:'KeyG',keyCode:71,ctrl:true,shift:true},
             'workbench.view.extensions':  {key:'x',code:'KeyX',keyCode:88,ctrl:true,shift:true},
+            /* Both terminal IDs map to the same shortcut because the
+               commandId and activityBarId differ for the Terminal panel. */
             'workbench.action.terminal.toggleTerminal': {key:'`',code:'Backquote',keyCode:192,ctrl:true,shift:false},
             'workbench.panel.terminal':   {key:'`',code:'Backquote',keyCode:192,ctrl:true,shift:false}
         };
