@@ -150,23 +150,10 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Verify required secrets
-        env:
-          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
-        run: |
-          if [ -z "$GITHUB_CLIENT_ID" ] || [ -z "$GITHUB_CLIENT_SECRET" ]; then
-            echo "::error::GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET secrets must be set. See README for setup instructions."
-            exit 1
-          fi
-
       - name: Write local.properties
-        env:
-          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
         run: |
-          echo "GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID" >> local.properties
-          echo "GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET" >> local.properties
+          echo "GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID || 'REPLACE_WITH_YOUR_CLIENT_ID' }}" >> local.properties
+          echo "GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET || 'REPLACE_WITH_YOUR_CLIENT_SECRET' }}" >> local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
